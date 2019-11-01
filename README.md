@@ -1,5 +1,6 @@
 # -Verilog-Netlist-Enhancer
 A utility to modify a given Verilog netlist to:
+
 • Size up cells that have large fan-out
 • Clone high fan-out cells
 • Add buffers to high fan-out cells and distribute the loads between them
