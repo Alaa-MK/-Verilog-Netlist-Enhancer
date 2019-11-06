@@ -49,20 +49,20 @@ circuit = nx.DiGraph()
 
 
 #Creatign the edge list of the circuit
-"""
+
 for w in wires_dict:
     for d in wires_dict[w]['destination']:
         s = wires_dict[w]['source']
         circuit.add_node(s)
         circuit.add_node(d)
-        circuit.add_edges_from((s, d), label=wires_dict[w])
+        circuit.add_edges((s, d), label=wires_dict[w])
         print (circuit.nodes())
 
 
 print (circuit.edges())
-#nx.draw(circuit,with_labels = True)  
+nx.draw(circuit,with_labels = True)  
 plt.show()
-"""
+
 
 
 
