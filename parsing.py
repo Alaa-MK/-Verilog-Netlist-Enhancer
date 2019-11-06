@@ -123,7 +123,6 @@ print (circuit.edges())
 nx.draw(circuit,with_labels = True)  
 plt.show()
 
->>>>>>> 2fbb2ceaa47c0a5e42538515a2be2982369aa83c
 
 
 
