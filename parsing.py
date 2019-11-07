@@ -2,9 +2,11 @@ import re
 import networkx as nx
 import matplotlib.pyplot as plt
 import sys
+import math
 #sys.path.insert(1, '\pyverilog-1.1.4\examples')
 #import example_parser
 
+wire_name_counter=1
 
 def get_ast(file_name):
     #exec(' .\pyverilog-1.1.4\examples\example_parser.py test.v > test.ast')  
@@ -50,7 +52,6 @@ def get_wires(ast):
 def create_network(wires_dict):
     #Creating the Circuit DiGraph
     circuit = nx.DiGraph()
-    
     #Creating the edge list of the circuit
     for w in wires_dict:
         for d in wires_dict[w]['destination']:
@@ -58,15 +59,40 @@ def create_network(wires_dict):
             circuit.add_edge(s, d, label=wires_dict[w])
             
     return circuit
+
+
+def get_fanout(cell_name, circuit):
+    return circuit.out_degree(cell_name)
         
 
+def buffering(circuit, cell_name, max_fanout):
+    circuit = nx.MultiDiGraph()  # TO BE REMOVED
+    n = len(circuit.nodes)
+    full_levels = math.log(n, max_fanout)-1
+    w = circuit.out_edges(cell_name)[0]
+    dict = {}
+    #TO BE CONTINUED
+        
+        
+def add_buffer_full_level(circuit, cell_name, max_fanout):
+    #create m nodes with input wire name and connect the 
+    wires = circuit.out_edges(cell_name)
+    outs = []
+    for node in circuit.nodes:    
+        if any([w in circuit.in_edges(node) for w in wires]):
+            outs.append(node)
+    print (wires)
+    print (outs)
+    
 def main():
     ast = ''
     with open('test.ast', 'r') as file:
         ast = file.read()
         
     wires_dict = get_wires(ast)
-    circuit = create_network(wires_dict)   
+    circuit = create_network(wires_dict) 
+    
+    add_buffer_full_level(circuit, 'u1', 2)
     nx.draw(circuit,with_labels = True)
     plt.show()    
 
