@@ -1,5 +1,6 @@
 import math
 import re
+import networkx as nx
 
 class Netlist:
     def __init__(self, v_file_name):
@@ -121,4 +122,55 @@ class Netlist:
                 if c_output == v2:
                     self.netlist[key][k2]= wires[math.floor(index/(fanout/n))]
                     index+=1
+                        
+            
+    def _get_wires_dict(self):
+        wires_temp = [list(d.values())[1:] for d in self.netlist.values()]
+        wires = []
+        for w in wires_temp:
+            wires+=w
+        
+        wires_dict = {}
+        for i in range (len(wires)):
+            wires_dict[wires[i]]={}
+            wires_dict[wires[i]]['destination']=[]
+            wires_dict[wires[i]]['source']=''    
+        
+        #filling wires_dict
+        for key, value in self.netlist.items():
+            for w in list(value.values())[1:-1]:
+                wires_dict[w]['destination'].append(key)
+            wires_dict[list(value.values())[-1]]['source']=key
+            
+        #return wires_dict
+        
+        Icount = 1
+        Ocount = 1
+        I = '__i1__'
+        O ='__o1__'
+        #Filling slots for the input and the output
+        for w in wires_dict:
+            if len(wires_dict[w]['destination']) == 0:
+                wires_dict[w]['destination'].append(O)
+                Ocount+=1
+                O = '__o{0}__'.format(Ocount)
+            if wires_dict[w]['source']=='':
+                wires_dict[w]['source']= I
+                Icount+=1
+                I = '__i{0}__'.format(Icount)
+        return wires_dict
+    
+    def create_graph(self):
+        wires_dict = self._get_wires_dict()
+        
+        #Creating the Circuit DiGraph
+        g = nx.DiGraph()
+        
+        #Creating the edge list of the circuit
+        for w in wires_dict:
+            for d in wires_dict[w]['destination']:
+                s = wires_dict[w]['source']
+                g.add_edge(s, d, label=wires_dict[w])
+        return g
+
     
