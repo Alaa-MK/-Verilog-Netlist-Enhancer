@@ -9,14 +9,14 @@ class Liberty:
     def _interpolate(self, x1,x2,y1,y2,c):
         return y1 + (y2-y1)*(c-x1)/(x2-x1)
     
-    def get_capacitance(self, cell_name, pin_name):
+    def get_pin_capacitance(self, cell_name, pin_name):
         cell = self.library.get_group('cell', cell_name)
         assert cell is not None
         pin = cell.get_group('pin', pin_name)   
         capacitance = float(re.search('capacitance:(.*?);',str(pin))[0][13:-1])
         return capacitance
     
-    def get_delay_time(self, cell_name, pin_name, out_cap):
+    def get_pin_delay(self, cell_name, pin_name, out_cap):
         cell = self.library.get_group('cell', cell_name)
         assert cell is not None
         pin = cell.get_group('pin', 'Y') 

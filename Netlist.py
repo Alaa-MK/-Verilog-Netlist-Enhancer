@@ -10,8 +10,8 @@ class Netlist:
         file = self._get_v_file_split(v_file_name)
         netlist_split = self._get_netlist_split(file)
         self.netlist = self._get_netlist_dict(netlist_split)
-        self.buffer_count = 0
-        self.buffer_wire_count = 0
+        self.cell_count = 0
+        self.wire_count = 0
         
     def _get_v_file_split(self, file_name):  
         with open(file_name, 'r') as file:
@@ -73,10 +73,10 @@ class Netlist:
         
         #add buffers and connect to source
         for i in range (n_buffers):
-            b_name = '__buffer__{0}'.format(self.buffer_count)
-            self.buffer_count+=1
-            b_wire_name = '__buffer_wire__{0}'.format(self.buffer_wire_count)
-            self.buffer_wire_count+=1
+            b_name = '__buffer{0}__'.format(self.cell_count)
+            self.cell_count+=1
+            b_wire_name = '__wire{0}__'.format(self.wire_count)
+            self.wire_count+=1
             b_wires.append(b_wire_name)
             b_cell = {'type':'BUFX2', 'A':b_in, 'Y':b_wire_name}
             self.netlist[b_name]=b_cell
@@ -85,8 +85,8 @@ class Netlist:
         index = 0
         for key, value in self.netlist.items():
             for k2, v2 in list(value.items())[1:-1]:
-                if b_in == v2 and key[:10] != '__buffer__':
-                    self.netlist[key][k2]= b_wires[index%len(b_wires)]
+                if b_in == v2 and key[:8] != '__buffer':
+                    self.netlist[key][k2]= b_wires[math.floor(index/(fanout/n_buffers))]
                     index+=1
         return True
     
@@ -96,4 +96,30 @@ class Netlist:
             keys = list(self.netlist.keys())
             flag = any([self._buffer_one_level(key, max_fanout) for key in keys])
             
-            
+    #clones the cell into two and divides outputs 
+    def clone_cell(self, cell_name, n_clones):
+        c_output=self.cell_output(cell_name)
+        n = min(n_clones, self.cell_fanout(cell_name))  # you shouldn't create clones more than the fanout
+        fanout=self.cell_fanout(cell_name)
+        wires = []
+        wires.append(c_output)
+        #add clones and connect to source inputs
+        for i in range (n-1):
+            c_name = '__cell{0}__'.format(self.cell_count)
+            self.cell_count+=1
+            wire_name = '__wire{0}__'.format(self.wire_count)
+            self.wire_count+=1
+            wires.append(wire_name)
+            cell = self.netlist[cell_name]
+            cell[list(cell.keys())[-1]] = wire_name
+            self.netlist[c_name]=cell
+                    
+        #connect cells to destinations
+        index = 0
+        for key, value in self.netlist.items():
+            for k2, v2 in list(value.items())[1:-1]:
+                if c_output == v2:
+                    print(math.floor(index/n))
+                    self.netlist[key][k2]= wires[math.floor(index/(fanout/n))]
+                    index+=1
+    
