@@ -110,7 +110,7 @@ class Netlist:
             wire_name = '__wire{0}__'.format(self.wire_count)
             self.wire_count+=1
             wires.append(wire_name)
-            cell = self.netlist[cell_name]
+            cell = self.netlist[cell_name].copy()
             cell[list(cell.keys())[-1]] = wire_name
             self.netlist[c_name]=cell
                     
@@ -119,7 +119,6 @@ class Netlist:
         for key, value in self.netlist.items():
             for k2, v2 in list(value.items())[1:-1]:
                 if c_output == v2:
-                    print(math.floor(index/n))
                     self.netlist[key][k2]= wires[math.floor(index/(fanout/n))]
                     index+=1
     
