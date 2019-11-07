@@ -95,3 +95,5 @@ class Netlist:
         while flag:
             keys = list(self.netlist.keys())
             flag = any([self._buffer_one_level(key, max_fanout) for key in keys])
+            
+            
