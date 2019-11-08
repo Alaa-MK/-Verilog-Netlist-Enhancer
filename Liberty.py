@@ -33,15 +33,15 @@ class Liberty:
         elif out_cap==1.2:
             delay= index[0][4]
         elif out_cap > 0.06 and out_cap < 0.18:
-            delay = self.interpolate(0.06,0.18,index[0][0], index[0][1],out_cap)
+            delay = self._interpolate(0.06,0.18,index[0][0], index[0][1],out_cap)
         elif out_cap > 0.18 and out_cap < 0.42:
-            delay = self.interpolate(0.18,0.42,index[0][1], index[0][2],out_cap)
+            delay = self._interpolate(0.18,0.42,index[0][1], index[0][2],out_cap)
         elif out_cap > 0.42 and out_cap < 0.6:
-            delay = self.interpolate(0.42,0.6,index[0][2], index[0][3],out_cap)
+            delay = self._interpolate(0.42,0.6,index[0][2], index[0][3],out_cap)
         elif out_cap > 0.6 and out_cap < 1.2:
-            delay = self.interpolate(0.6,1.2,index[0][3], index[0][4],out_cap)
+            delay = self._interpolate(0.6,1.2,index[0][3], index[0][4],out_cap)
         elif out_cap < 0.6:
-            delay = self.interpolate(0.6,1.2,index[0][0],index[0][1],out_cap)
+            delay = self._interpolate(0.6,1.2,index[0][0],index[0][1],out_cap)
         elif out_cap > 1.2:
-            delay = self.interpolate(0.6,1.2,index[0][3],index[0][4],out_cap)
+            delay = self._interpolate(0.6,1.2,index[0][3],index[0][4],out_cap)
         return delay

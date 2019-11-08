@@ -1,9 +1,12 @@
 import math
 import re
 import networkx as nx
+from Liberty import Liberty
 
 class Netlist:
     def __init__(self, v_file_name):
+        self.liberty=Liberty()
+        self.g = nx.DiGraph()
         self.cell_names=['AND2X1','AND2X2','AOI21X1','AOI22X1','BUFX2','BUFX4','DFFNEGX1','NOR3X1',
             'DFFPOSX1','FAX1','HAX1','INVX1','INVX2','INVX4','INVX8','NAND2X1','NAND3X1','NOR2X1',
             'OAI21X1','OAI22X1','OR2X1','OR2X2','TBUFX1','TBUFX2','XOR2X1','MUX2X1','XNOR2X1',
@@ -11,6 +14,7 @@ class Netlist:
         file = self._get_v_file_split(v_file_name)
         netlist_split = self._get_netlist_split(file)
         self.netlist = self._get_netlist_dict(netlist_split)
+        self._update_load_capacitance()
         self.cell_count = 0
         self.wire_count = 0
         
@@ -48,7 +52,7 @@ class Netlist:
         return str
         
     def cell_inputs(self, cell_name):
-        return list(self.netlist[cell_name].values())[1:-1]
+        return list(self.netlist[cell_name].values())[1:-2]
         
     def cell_output(self, cell_name):
         return list(self.netlist[cell_name].values())[-1]
@@ -85,7 +89,7 @@ class Netlist:
         #connect buffers to destinations
         index = 0
         for key, value in self.netlist.items():
-            for k2, v2 in list(value.items())[1:-1]:
+            for k2, v2 in list(value.items())[1:-2]:
                 if b_in == v2 and key[:8] != '__buffer':
                     self.netlist[key][k2]= b_wires[math.floor(index/(fanout/n_buffers))]
                     index+=1
@@ -96,6 +100,7 @@ class Netlist:
         while flag:
             keys = list(self.netlist.keys())
             flag = any([self._buffer_one_level(key, max_fanout) for key in keys])
+        self._update_load_capacitance()
             
     #clones the cell into two and divides outputs 
     def clone_cell(self, cell_name, n_clones):
@@ -118,10 +123,11 @@ class Netlist:
         #connect cells to destinations
         index = 0
         for key, value in self.netlist.items():
-            for k2, v2 in list(value.items())[1:-1]:
+            for k2, v2 in list(value.items())[1:-2]:
                 if c_output == v2:
                     self.netlist[key][k2]= wires[math.floor(index/(fanout/n))]
-                    index+=1
+                    index+=1 
+        self._update_load_capacitance()
                         
             
     def _get_wires_dict(self):
@@ -138,7 +144,7 @@ class Netlist:
         
         #filling wires_dict
         for key, value in self.netlist.items():
-            for w in list(value.values())[1:-1]:
+            for w in list(value.values())[1:-2]:
                 wires_dict[w]['destination'].append(key)
             wires_dict[list(value.values())[-1]]['source']=key
             
@@ -160,17 +166,56 @@ class Netlist:
                 I = '__i{0}__'.format(Icount)
         return wires_dict
     
-    def create_graph(self):
+    def _create_network(self):
         wires_dict = self._get_wires_dict()
-        
-        #Creating the Circuit DiGraph
-        g = nx.DiGraph()
         
         #Creating the edge list of the circuit
         for w in wires_dict:
             for d in wires_dict[w]['destination']:
                 s = wires_dict[w]['source']
-                g.add_edge(s, d, label=wires_dict[w])
-        return g
+                self.g.add_edge(s, d, label=w)
+    
+    def _add_delay_to_graph(self):
+        wires_dict = self._get_wires_dict()
+        for w in wires_dict:
+            for d in wires_dict[w]['destination']:
+                if wires_dict[w]['destination'][0:2]!='__':
+                    print(self.netlist[d])
+                    s = wires_dict[w]['source']
+                    d_cell_type = self.netlist[d]['type']
+                    d_cell_cap = self.netlist[d]['load_capacitance']
+                    d_pin_name=''
+                    for key, value in list(self.netlist[d].items())[1:-2]:
+                        if value==w:
+                            d_pin_name = key
+                    self.g[s][d]['weight']= self.liberty.get_pin_delay(d_cell_type, d_pin_name, d_cell_cap)
+
+    def create_graph(self):
+        self._create_network()
+        self._add_delay_to_graph()
+        return self.g
+    
+    def get_all_delays(self):
+        self.create_graph()
+        return self.g
+    
+    def _wire_destinations(self, wire_name):
+        destinations=[]
+        for key, value in self.netlist.items():
+            for k2, v2 in list(value.items())[1:-2]:
+                if v2==wire_name:
+                    destinations.append([value['type'], k2])
+        return destinations 
+    
+    def _get_output_capacitance(self, cell_name):
+        destinations = self._wire_destinations(self.cell_output(cell_name))
+        c = 0
+        for d in destinations:
+            c+= self.liberty.get_pin_capacitance(d[0],d[1])
+        return c
+    
+    def _update_load_capacitance(self):
+        for key in self.netlist.keys():
+            self.netlist[key]['load_capacitance']=self._get_output_capacitance(key)
 
     
