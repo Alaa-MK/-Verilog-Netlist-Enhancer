@@ -23,25 +23,25 @@ class Liberty:
         time_table= select_timing_table(pin,pin_name,'rise_transition')
         index=time_table.get_array('values')
         if out_cap==0.06:
-            delay= index[0][0]
+            delay= index[2][0]
         elif out_cap==0.18:
-            delay= index[0][1]
+            delay= index[2][1]
         elif out_cap==0.42:
-            delay= index[0][2]
+            delay= index[2][2]
         elif out_cap==0.6:
-            delay= index[0][3]
+            delay= index[2][3]
         elif out_cap==1.2:
-            delay= index[0][4]
+            delay= index[2][4]
         elif out_cap > 0.06 and out_cap < 0.18:
-            delay = self._interpolate(0.06,0.18,index[0][0], index[0][1],out_cap)
+            delay = self._interpolate(0.06,0.18,index[2][0], index[2][1],out_cap)
         elif out_cap > 0.18 and out_cap < 0.42:
-            delay = self._interpolate(0.18,0.42,index[0][1], index[0][2],out_cap)
+            delay = self._interpolate(0.18,0.42,index[2][1], index[2][2],out_cap)
         elif out_cap > 0.42 and out_cap < 0.6:
-            delay = self._interpolate(0.42,0.6,index[0][2], index[0][3],out_cap)
+            delay = self._interpolate(0.42,0.6,index[2][2], index[2][3],out_cap)
         elif out_cap > 0.6 and out_cap < 1.2:
-            delay = self._interpolate(0.6,1.2,index[0][3], index[0][4],out_cap)
+            delay = self._interpolate(0.6,1.2,index[2][3], index[2][4],out_cap)
         elif out_cap < 0.6:
-            delay = self._interpolate(0.6,1.2,index[0][0],index[0][1],out_cap)
+            delay = self._interpolate(0.6,1.2,index[2][0],index[2][1],out_cap)
         elif out_cap > 1.2:
-            delay = self._interpolate(0.6,1.2,index[0][3],index[0][4],out_cap)
+            delay = self._interpolate(0.6,1.2,index[2][3],index[2][4],out_cap)
         return delay

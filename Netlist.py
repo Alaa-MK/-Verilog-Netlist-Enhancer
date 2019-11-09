@@ -165,11 +165,12 @@ class Netlist:
                 wires_dict[key]['source']= I
                 Icount+=1
                 I = '__i{0}__'.format(Icount)
+                
         return wires_dict
+
     
     def _create_network(self):
         wires_dict = self._get_wires_dict()
-        
         #Creating the edge list of the circuit
         for w in wires_dict:
             for d in wires_dict[w]['destination']:
@@ -206,6 +207,16 @@ class Netlist:
         #self._split_on_FFs()
         #self._add_delay_to_graph()
         return self.g
+
+    def split_on_FFs(self):
+        countq=0
+        for e in self.g.edges:
+            if(e[0][0:2]!='__'):
+                if(self.netlist[e[0]]['type'][0:3]=='DFF'):
+                    self.g.add_edge('q'+str(countq),e[1])
+                    countq+=1
+                    self.g.remove_edge(e)
+
     
     def get_all_delays(self):
         self.create_graph()
