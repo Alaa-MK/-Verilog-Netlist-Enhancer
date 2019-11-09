@@ -229,8 +229,8 @@ class Netlist:
 
     
     def get_all_delays(self):
-        self.create_graph()
-        return self.g
+        #self.create_graph()
+        return self.g.edges.data()
     
     def _wire_destinations(self, wire_name):
         destinations=[]
