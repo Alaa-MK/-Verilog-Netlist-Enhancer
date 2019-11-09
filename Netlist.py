@@ -155,7 +155,6 @@ class Netlist:
         I = '__i1__'
         O ='__o1__'
         #Filling slots for the input and the output
-        print (wires_dict)
         for key, value in wires_dict.items():
             if len(value['destination']) == 0:
                 wires_dict[key]['destination'].append(O)
@@ -182,40 +181,51 @@ class Netlist:
         for key, value in wires_dict.items():
             for d in value['destination']:
                 if d[0:2]!='__':
-                    #print(self.netlist[d])
                     s = value['source']
-                    d_cell_type = self.netlist[d]['type']
-                    d_cell_cap = self.netlist[d]['load_capacitance']
-                    d_pin_name=''
-                    for k2, v2 in list(self.netlist[d].items())[1:-2]:
-                        if v2==key:
-                            d_pin_name = k2
-                    self.g[s][d]['weight']= self.liberty.get_pin_delay(d_cell_type, d_pin_name, d_cell_cap)
+                    if self.netlist[d]['type'][0:3]=='DFF':
+                        self.g[s][d]['weight']= 0
+                    else:
+                        d_cell_type = self.netlist[d]['type']
+                        d_cell_cap = self.netlist[d]['load_capacitance']
+                        d_pin_name=''
+                        for k2, v2 in list(self.netlist[d].items())[1:-2]:
+                            if v2==key:
+                                d_pin_name = k2
+                        self.g[s][d]['weight']= self.liberty.get_pin_delay(d_cell_type, d_pin_name, d_cell_cap)
     
     def _split_on_FFs(self):
         countq=0
-        for e in self.g.edges:
-            print(e[0][0:2]!= '__')
-            if e[0][0:2]!= '__':
-                if self.netlist[e[0]]['type'][0:3]=='DFF':
-                    self.g.add_edge('q'+str(countq),e[1])
+        edges_to_add = []
+        edges_to_remove = []
+#        for e in self.g.edges:
+#            if e[0][0:2]!= '__':
+#                if self.netlist[e[0]]['type'][0:3]=='DFF':
+#                    edges_to_add.append (('q'+str(countq),e[1]))
+#                    countq+=1
+#                    edges_to_remove.append(e)
+#                    
+#        for e in edges_to_add:
+#            self.g.add_edge(e[0], e[1])
+#        for e in edges_to_remove:
+#            self.g.remove_edge(e[0], e[1]) 
+        for n in self.g.nodes:
+            if n[0:2]!= '__':
+                if self.netlist[n]['type'][0:3]=='DFF':
+                    for i in self.g.out_edges(n):
+                        edges_to_add.append(('q'+str(countq),i[1]))
+                        edges_to_remove.append(i)
                     countq+=1
-                    self.g.remove_edge(e)
+        for e in edges_to_add:
+            self.g.add_edge(e[0], e[1])
+        for e in edges_to_remove:
+            self.g.remove_edge(e[0], e[1]) 
+                
                 
     def create_graph(self):
         self._create_network()
-        #self._split_on_FFs()
-        #self._add_delay_to_graph()
+        self._add_delay_to_graph()
+        self._split_on_FFs()
         return self.g
-
-    def split_on_FFs(self):
-        countq=0
-        for e in self.g.edges:
-            if(e[0][0:2]!='__'):
-                if(self.netlist[e[0]]['type'][0:3]=='DFF'):
-                    self.g.add_edge('q'+str(countq),e[1])
-                    countq+=1
-                    self.g.remove_edge(e)
 
     
     def get_all_delays(self):

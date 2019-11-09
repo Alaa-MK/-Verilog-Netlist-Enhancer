@@ -6,7 +6,7 @@ import networkx as nx
 
 
 def main():
-    netlist = Netlist('buffering_test.v')
+    netlist = Netlist('test.v')
     #netlist.buffer_all(2)
     #netlist.clone_cell('u1', 3)
     #print(netlist.to_v_netlist())

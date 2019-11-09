@@ -12,14 +12,17 @@ class Liberty:
     def get_pin_capacitance(self, cell_name, pin_name):
         cell = self.library.get_group('cell', cell_name)
         assert cell is not None
-        pin = cell.get_group('pin', pin_name)   
+        pin = cell.get_group('pin', pin_name)  
         capacitance = float(re.search('capacitance:(.*?);',str(pin))[0][13:-1])
         return capacitance
     
     def get_pin_delay(self, cell_name, pin_name, out_cap):
         cell = self.library.get_group('cell', cell_name)
         assert cell is not None
-        pin = cell.get_group('pin', 'Y') 
+        if cell_name[0:3]=='DFF':
+            pin = cell.get_group('pin', 'Q')
+        else:
+            pin = cell.get_group('pin', 'Y')
         time_table= select_timing_table(pin,pin_name,'rise_transition')
         index=time_table.get_array('values')
         if out_cap==0.06:

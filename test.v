@@ -24,10 +24,10 @@ wire iccad_clk;
 wire out;
 
 // Start cells
-NAND2X1 u1 ( .A1(inp1), .A2(inp2), .ZN(n1) );
-DFFPOSX1 f1 ( .D(n2), .CK(iccad_clk), .Q(n3) );
-INVX1 u2 ( .A(n3), .ZN(n4) );
-INVX1 u3 ( .A(n4), .ZN(out) );
-NOR2X1 u4 ( .A1(n1), .A2(n3), .ZN(n2) );
+NAND2X1 u1 ( .A(inp1), .B(inp2), .Y(n1) );
+DFFPOSX1 f1 ( .D(n2), .CLK(iccad_clk), .Q(n3) );
+INVX1 u2 ( .A(n3), .Y(n4) );
+INVX1 u3 ( .A(n4), .Y(out) );
+NOR2X1 u4 ( .A(n1), .B(n3), .Y(n2) );
 
 endmodule
