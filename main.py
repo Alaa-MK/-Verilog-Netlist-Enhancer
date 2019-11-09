@@ -12,10 +12,9 @@ def main():
     #print(netlist.to_v_netlist())
     #liberty = Liberty()
     
-    #g = netlist.create_graph()
-    #nx.draw(g,with_labels = True)
-    #plt.show()    
-    print(netlist.create_graph().edges)
+    g = netlist.create_graph()
+    nx.draw(g,with_labels = True)
+    plt.show()    
     
 if __name__ == "__main__":
     main()

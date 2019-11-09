@@ -131,7 +131,7 @@ class Netlist:
                         
             
     def _get_wires_dict(self):
-        wires_temp = [list(d.values())[1:] for d in self.netlist.values()]
+        wires_temp = [list(d.values())[1:-1] for d in self.netlist.values()]
         wires = []
         for w in wires_temp:
             wires+=w
@@ -146,7 +146,7 @@ class Netlist:
         for key, value in self.netlist.items():
             for w in list(value.values())[1:-2]:
                 wires_dict[w]['destination'].append(key)
-            wires_dict[list(value.values())[-1]]['source']=key
+            wires_dict[list(value.values())[-2]]['source']=key
             
         #return wires_dict
         
@@ -155,13 +155,14 @@ class Netlist:
         I = '__i1__'
         O ='__o1__'
         #Filling slots for the input and the output
-        for w in wires_dict:
-            if len(wires_dict[w]['destination']) == 0:
-                wires_dict[w]['destination'].append(O)
+        print (wires_dict)
+        for key, value in wires_dict.items():
+            if len(value['destination']) == 0:
+                wires_dict[key]['destination'].append(O)
                 Ocount+=1
                 O = '__o{0}__'.format(Ocount)
-            if wires_dict[w]['source']=='':
-                wires_dict[w]['source']= I
+            if value['source']=='':
+                wires_dict[key]['source']= I
                 Icount+=1
                 I = '__i{0}__'.format(Icount)
         return wires_dict
@@ -177,22 +178,33 @@ class Netlist:
     
     def _add_delay_to_graph(self):
         wires_dict = self._get_wires_dict()
-        for w in wires_dict:
-            for d in wires_dict[w]['destination']:
-                if wires_dict[w]['destination'][0:2]!='__':
-                    print(self.netlist[d])
-                    s = wires_dict[w]['source']
+        for key, value in wires_dict.items():
+            for d in value['destination']:
+                if d[0:2]!='__':
+                    #print(self.netlist[d])
+                    s = value['source']
                     d_cell_type = self.netlist[d]['type']
                     d_cell_cap = self.netlist[d]['load_capacitance']
                     d_pin_name=''
-                    for key, value in list(self.netlist[d].items())[1:-2]:
-                        if value==w:
-                            d_pin_name = key
+                    for k2, v2 in list(self.netlist[d].items())[1:-2]:
+                        if v2==key:
+                            d_pin_name = k2
                     self.g[s][d]['weight']= self.liberty.get_pin_delay(d_cell_type, d_pin_name, d_cell_cap)
-
+    
+    def _split_on_FFs(self):
+        countq=0
+        for e in self.g.edges:
+            print(e[0][0:2]!= '__')
+            if e[0][0:2]!= '__':
+                if self.netlist[e[0]]['type'][0:3]=='DFF':
+                    self.g.add_edge('q'+str(countq),e[1])
+                    countq+=1
+                    self.g.remove_edge(e)
+                
     def create_graph(self):
         self._create_network()
-        self._add_delay_to_graph()
+        #self._split_on_FFs()
+        #self._add_delay_to_graph()
         return self.g
     
     def get_all_delays(self):
