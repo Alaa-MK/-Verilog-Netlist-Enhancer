@@ -136,6 +136,14 @@ class Netlist:
                     self.netlist[key][k2]= wires[math.floor(index/(fanout/n))]
                     index+=1 
         self._update_load_capacitance()
+
+    def sizing_up(self):
+        critical_p = critical_path(self)
+        for n in critical_p.nodes():
+            c_type =self.netlist[n]['type']
+            c_type_new =c_type[0:-1]+str(int(c_type[len(c_type)-1])+1)
+            if c_type_new in self.cell_names
+                self.netlist[n]['type']=c_type_new
                         
             
     def _get_wires_dict(self):
@@ -228,6 +236,9 @@ class Netlist:
 
     def report_max_delay(self):
         return nx.dag_longest_path_length(self.g)
+
+    def critical_path(self):
+        return nx.dag_longest_path(self.g)
                 
                 
     def create_graph(self):
