@@ -13,6 +13,7 @@ class Netlist:
             'LATCH','DFFSR','CLKBUF1','CLKBUF2','CLKBUF3']
         file = self._get_v_file_split(v_file_name)
         netlist_split = self._get_netlist_split(file)
+        self.outputs = self._get_output_list(file)
         self.netlist = self._get_netlist_dict(netlist_split)
         self._update_load_capacitance()
         self.cell_count = 0
@@ -30,6 +31,13 @@ class Netlist:
             if l[0] in self.cell_names:
                 netlist.append(l)
         return netlist
+
+    def _get_output_list(self,file_split): #a function to get the outputs of the circuits in a list
+        outputs = []
+        for l in file_split:
+            if l[0]=='output':
+                outputs.append(l[1][0:-2])
+        return outputs
     
     def _get_netlist_dict(self, netlist_split):
         netlist = {}
@@ -51,20 +59,20 @@ class Netlist:
             str = str + line
         return str
         
-    def cell_inputs(self, cell_name):
+    def cell_inputs(self, cell_name): #a function to return the list inputs of a certain cell instance
         return list(self.netlist[cell_name].values())[1:-2]
         
-    def cell_output(self, cell_name):
+    def cell_output(self, cell_name): #a function to return the list outputs of a certain cell instance
         return list(self.netlist[cell_name].values())[-1]
         
-    def cell_fanout(self, cell_name):
+    def cell_fanout(self, cell_name): #a function to return the fanout of a given cell instance
         output_wire = self.cell_output(cell_name)
         counter = 0
         for key, value in self.netlist.items():
             counter += self.cell_inputs(key).count(output_wire)
         return counter
     
-    def max_fanout(self):
+    def max_fanout(self): #a function to return the maximum fanout in the circuit
         return max([self.cell_fanout(c) for c in list(self.netlist.keys())])
     
     #returns true if the netlist was modified
@@ -149,22 +157,20 @@ class Netlist:
             wires_dict[list(value.values())[-2]]['source']=key
             
         #return wires_dict
-        
         Icount = 1
         Ocount = 1
         I = '__i1__'
         O ='__o1__'
         #Filling slots for the input and the output
         for key, value in wires_dict.items():
-            if len(value['destination']) == 0:
+            if key in self.outputs:
                 wires_dict[key]['destination'].append(O)
                 Ocount+=1
                 O = '__o{0}__'.format(Ocount)
             if value['source']=='':
                 wires_dict[key]['source']= I
                 Icount+=1
-                I = '__i{0}__'.format(Icount)
-                
+                I = '__i{0}__'.format(Icount)   
         return wires_dict
 
     
@@ -197,34 +203,34 @@ class Netlist:
         countq=0
         edges_to_add = []
         edges_to_remove = []
-#        for e in self.g.edges:
-#            if e[0][0:2]!= '__':
-#                if self.netlist[e[0]]['type'][0:3]=='DFF':
-#                    edges_to_add.append (('q'+str(countq),e[1]))
-#                    countq+=1
-#                    edges_to_remove.append(e)
-#                    
-#        for e in edges_to_add:
-#            self.g.add_edge(e[0], e[1])
-#        for e in edges_to_remove:
-#            self.g.remove_edge(e[0], e[1]) 
+        weights=[]
         for n in self.g.nodes:
             if n[0:2]!= '__':
                 if self.netlist[n]['type'][0:3]=='DFF':
                     for i in self.g.out_edges(n):
                         edges_to_add.append(('q'+str(countq),i[1]))
                         edges_to_remove.append(i)
+                        weights.append(self.g[i[0]][i[1]]['weight'])
                     countq+=1
-        for e in edges_to_add:
-            self.g.add_edge(e[0], e[1])
+        for i in range(len(edges_to_add)):
+            self.g.add_edge(edges_to_add[i][0], edges_to_add[i][1])
+            self.g[edges_to_add[i][0]][edges_to_add[i][1]]['weight']=weights[i]
         for e in edges_to_remove:
             self.g.remove_edge(e[0], e[1]) 
+
+    def report_no_of_cells_of_each_type(self):
+        cells_dict={}
+        for c in self.cell_names:
+            cells_dict[c]=0
+        for key,value in self.netlist.items():
+            cells_dict[value['type']]+=1
+        return cells_dict
                 
                 
     def create_graph(self):
         self._create_network()
-        self._add_delay_to_graph()
         self._split_on_FFs()
+        self._add_delay_to_graph()
         return self.g
 
     
@@ -245,6 +251,9 @@ class Netlist:
         c = 0
         for d in destinations:
             c+= self.liberty.get_pin_capacitance(d[0],d[1])
+        for w in self.cell_output(cell_name):
+            if w in self.outputs:
+                c+= liberty.get_middle_capacitance()
         return c
     
     def _update_load_capacitance(self):

@@ -7,15 +7,16 @@ import networkx as nx
 
 def main():
     netlist = Netlist('test.v')
+    print(netlist.report_no_of_cells_of_each_type())
     #netlist.buffer_all(2)
     #netlist.clone_cell('u1', 3)
     #print(netlist.to_v_netlist())
     #liberty = Liberty()
     
-    g = netlist.create_graph()
-    print(netlist.get_all_delays())
-    nx.draw(g,with_labels = True)
-    plt.show()    
+    #g = netlist.create_graph()
+    #print(netlist.get_all_delays())
+    #nx.draw(g,with_labels = True)
+    #plt.show()    
     
 if __name__ == "__main__":
     main()
@@ -32,3 +33,4 @@ if __name__ == "__main__":
  ('u3', '__o1__', {'label': 'out'}),
  ('q0', 'u2', {}),
  ('q0', 'u4', {})]
+ '''
