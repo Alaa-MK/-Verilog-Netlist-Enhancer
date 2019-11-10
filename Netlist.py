@@ -138,8 +138,7 @@ class Netlist:
                     index+=1
         self._update_load_capacitance() 
         self._create_graph()
-                        
-            
+        
     def _get_wires_dict(self):
         wires_temp = [list(d.values())[1:-1] for d in self.netlist.values()]
         wires = []
@@ -230,7 +229,7 @@ class Netlist:
 
     def report_max_delay(self):
         return nx.dag_longest_path_length(self.g)
-    
+
     def report_critical_path(self):
         return nx.dag_longest_path(self.g)
     
