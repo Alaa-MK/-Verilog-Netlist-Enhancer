@@ -138,7 +138,7 @@ class Netlist:
         self._update_load_capacitance()
 
     def sizing_up(self):
-        critical_p = critical_path(self)
+        critical_p = self.critical_path()
         for n in critical_p.nodes():
             c_type =self.netlist[n]['type']
             c_type_new =c_type[0:-1]+str(int(c_type[len(c_type)-1])+1)
