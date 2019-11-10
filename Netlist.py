@@ -197,26 +197,18 @@ class Netlist:
         countq=0
         edges_to_add = []
         edges_to_remove = []
-#        for e in self.g.edges:
-#            if e[0][0:2]!= '__':
-#                if self.netlist[e[0]]['type'][0:3]=='DFF':
-#                    edges_to_add.append (('q'+str(countq),e[1]))
-#                    countq+=1
-#                    edges_to_remove.append(e)
-#                    
-#        for e in edges_to_add:
-#            self.g.add_edge(e[0], e[1])
-#        for e in edges_to_remove:
-#            self.g.remove_edge(e[0], e[1]) 
+        weights=[]
         for n in self.g.nodes:
             if n[0:2]!= '__':
                 if self.netlist[n]['type'][0:3]=='DFF':
                     for i in self.g.out_edges(n):
                         edges_to_add.append(('q'+str(countq),i[1]))
                         edges_to_remove.append(i)
+                        weights.append(self.g[i[0]][i[1]]['weight'])
                     countq+=1
-        for e in edges_to_add:
-            self.g.add_edge(e[0], e[1])
+        for i in range(len(edges_to_add)):
+            self.g.add_edge(edges_to_add[i][0], edges_to_add[i][1])
+            self.g[edges_to_add[i][0]][edges_to_add[i][1]]['weight']=weights[i]
         for e in edges_to_remove:
             self.g.remove_edge(e[0], e[1]) 
                 
@@ -231,6 +223,9 @@ class Netlist:
     def get_all_delays(self):
         #self.create_graph()
         return self.g.edges.data()
+    
+    def max_delay(self):
+        return nx.dag_longest_path_length(self.g);
     
     def _wire_destinations(self, wire_name):
         destinations=[]
