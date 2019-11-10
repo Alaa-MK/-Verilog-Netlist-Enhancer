@@ -225,6 +225,9 @@ class Netlist:
         for key,value in self.netlist.items():
             cells_dict[value['type']]+=1
         return cells_dict
+
+    def report_max_delay(self):
+        return nx.dag_longest_path_length(self.g)
                 
                 
     def create_graph(self):
