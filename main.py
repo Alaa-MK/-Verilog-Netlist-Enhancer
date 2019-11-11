@@ -55,6 +55,8 @@ def main(argv):
             buffer: satisfy the max fanout constraint using buffering
             clone: try to satisfy the max fanout constraint using cloning
             size: do greedy sizing algorithm to decrease the delay of the critical path
+            graph: visualize the circuit as a graph
+            netlist: print the current verilog netlist
             quit: quit the program
             
             ''')
@@ -75,6 +77,11 @@ def main(argv):
             print('Delay Before Sizing: ', netlist.max_delay())
             netlist.sizing_up()
             print('Delay After Sizing: ', netlist.max_delay())
+        elif c=='graph':
+            nx.draw(netlist.get_graph(),with_labels = True)
+            plt.show() 
+        elif c=='netlist':
+            print(netlist.to_v_netlist())
         else:
             print('Please choose a valid option.')
         
