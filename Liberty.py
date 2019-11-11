@@ -6,24 +6,26 @@ class Liberty:
     def __init__(self, filename):
         self.library = parse_liberty(open(filename).read())
     
-    def _interpolate(self, x1,x2,y1,y2,c):
+    def _interpolate(self, x1,x2,y1,y2,c): #interpolation function
         return y1 + (y2-y1)*(c-x1)/(x2-x1)
 
-    def get_middle_capacitance(self):
+    def get_middle_capacitance(self): #a function to return the value of the middle capacitance 
         cell = self.library.get_group('cell', 'AND2X1')
         pin = cell.get_group('pin', 'Y')
         time_table= select_timing_table(pin,'A','rise_transition')
         index2=time_table.get_array('index_2')
         return index2[0][2]
     
-    def get_pin_capacitance(self, cell_name, pin_name):
-        cell = self.library.get_group('cell', cell_name)
+    def get_pin_capacitance(self, cell_name, pin_name): #a function to return the capacitance of a certain input pin 
+        cell = self.library.get_group('cell', cell_name) #for a certain cell
         assert cell is not None
         pin = cell.get_group('pin', pin_name)  
         capacitance = float(re.search('capacitance:(.*?);',str(pin))[0][13:-1])
         return capacitance
     
-    def get_pin_delay(self, cell_name, pin_name, out_cap):
+    def get_pin_delay(self, cell_name, pin_name, out_cap): #a function to return the delay of a certain arc 
+                                                           #for a certain cell given the load capacitance
+
         cell = self.library.get_group('cell', cell_name)
         assert cell is not None
         if cell_name[0:3]=='DFF':
