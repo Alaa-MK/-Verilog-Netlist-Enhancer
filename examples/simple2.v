@@ -1,14 +1,12 @@
 module simple (
 inp1,
 inp2,
-iccad_clk,
 out
 );
 
 // Start PIs
 input inp1;
 input inp2;
-input iccad_clk;
 
 // Start POs
 output out;
@@ -20,7 +18,6 @@ wire n3;
 wire n4;
 wire inp1;
 wire inp2;
-wire iccad_clk;
 wire out;
 
 // Start cells
@@ -29,6 +26,5 @@ NOR2X1 u5 (.A(n1), .B(inp1), .Y(n2));
 XOR2X1 u6 (.A(n2), .B(n1), .Y(n3));
 INVX1 u2 ( .A(n3), .Y(n4) );
 INVX1 u3 ( .A(n4), .Y(out) );
-NOR2X1 u4 ( .A(n1), .B(n3), .Y(n2) );
 
 endmodule
