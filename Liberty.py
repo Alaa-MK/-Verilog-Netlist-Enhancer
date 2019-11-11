@@ -3,8 +3,8 @@ from liberty.types import select_timing_table
 import re
 
 class Liberty:
-    def __init__(self):
-        self.library = parse_liberty(open("osu035.lib").read())
+    def __init__(self, filename):
+        self.library = parse_liberty(open(filename).read())
     
     def _interpolate(self, x1,x2,y1,y2,c):
         return y1 + (y2-y1)*(c-x1)/(x2-x1)

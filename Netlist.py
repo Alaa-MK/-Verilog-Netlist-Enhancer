@@ -5,8 +5,8 @@ from Liberty import Liberty
 import random
 
 class Netlist:
-    def __init__(self, v_file_name):
-        self.liberty=Liberty()
+    def __init__(self, v_file_name, lib_file_name):
+        self.liberty=Liberty(lib_file_name)
         self.cell_names=['AND2X1','AND2X2','AOI21X1','AOI22X1','BUFX2','BUFX4','DFFNEGX1','NOR3X1',
             'DFFPOSX1','FAX1','HAX1','INVX1','INVX2','INVX4','INVX8','NAND2X1','NAND3X1','NOR2X1',
             'OAI21X1','OAI22X1','OR2X1','OR2X2','TBUFX1','TBUFX2','XOR2X1','MUX2X1','XNOR2X1',
@@ -79,7 +79,6 @@ class Netlist:
     #returns true if the netlist was modified
     def _buffer_one_level(self, cell_name, max_fanout):
         fanout = self.cell_fanout(cell_name)
-        print(cell_name, fanout)
         if fanout <= max_fanout:
             return False        #no violation
         b_in = self.cell_output(cell_name)
@@ -109,15 +108,17 @@ class Netlist:
         flag = True
         while flag:
             keys = list(self.netlist.keys())
-            print(self.netlist.keys())
             flag = any([self._buffer_one_level(key, max_fanout) for key in keys])
             self._update_load_capacitance()
             self._create_graph()
             
     #clones the cell into two and divides outputs 
-    def clone_cell(self, cell_name, n_clones):
+    def _clone_cell(self, cell_name, max_fanout):
+        fanout = self.cell_fanout(cell_name)
+        if fanout <= max_fanout:
+            return False        #no violation
         c_output=self.cell_output(cell_name)
-        n = min(n_clones, self.cell_fanout(cell_name))  # you shouldn't create clones more than the fanout
+        n = min(max_fanout, self.cell_fanout(cell_name))  # you shouldn't create clones more than the fanout
         fanout=self.cell_fanout(cell_name)
         wires = []
         wires.append(c_output)
@@ -141,7 +142,17 @@ class Netlist:
                     index+=1
         self._update_load_capacitance() 
         self._create_graph()
+        return True
         
+    def clone_all(self, max_fanout):
+        flag = True
+        while flag:
+            keys = list(self.netlist.keys())
+            flag = any([self._clone_cell(key, max_fanout) for key in keys])
+            self._update_load_capacitance()
+            self._create_graph()
+        
+    
     def _get_wires_dict(self):
         wires_temp = [list(d.values())[1:-1] for d in self.netlist.values()]
         wires = []
@@ -264,7 +275,8 @@ class Netlist:
                             self._create_graph()
         return False
 
-    def sizing_up(self,desired_delay):           
+    def sizing_up(self,desired_delay):     
+        print('trying to satisfy delay constraint..')
         for j in range(100):
             if(self._sizing_up_iteration(desired_delay)):
                 print("delay satisfied")
@@ -281,11 +293,6 @@ class Netlist:
     def get_graph(self):
         return self.g
 
-    
-    def get_all_delays(self):
-        #self.create_graph()
-        return self.g.edges.data()
-    
     def max_delay(self):
         return nx.dag_longest_path_length(self.g);
     
