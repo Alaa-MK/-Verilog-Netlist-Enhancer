@@ -11,7 +11,7 @@ class Netlist:
             'DFFPOSX1','FAX1','HAX1','INVX1','INVX2','INVX4','INVX8','NAND2X1','NAND3X1','NOR2X1',
             'OAI21X1','OAI22X1','OR2X1','OR2X2','TBUFX1','TBUFX2','XOR2X1','MUX2X1','XNOR2X1',
             'LATCH','DFFSR','CLKBUF1','CLKBUF2','CLKBUF3']
-        file = self._get_v_file_split(v_file_name)
+        file, self.v_header= self._get_v_file_split(v_file_name)
         netlist_split = self._get_netlist_split(file)
         self.outputs = self._get_output_list(file)
         self.netlist = self._get_netlist_dict(netlist_split)
@@ -22,15 +22,19 @@ class Netlist:
         
     def _get_v_file_split(self, file_name):  
         with open(file_name, 'r') as file:
-            data = file.readlines()
+            data = file.readlines() #to read lines and split each line into words
             data_split = [line.split(' ') for line in data]
-        return data_split
+            end = 100000 #to get the end of the verilog netlist header, before the instances
+            for i in range(len(data)):
+                if data_split[i][0] in self.cell_names:
+                    end = min(end, i)
+        return data_split, ''.join(data[:end])
     
-    def _get_netlist_split(self, file_split):
-        netlist = []
-        for l in file_split:
-            if l[0] in self.cell_names:
-                netlist.append(l)
+    def _get_netlist_split(self, file_split): #to create a list of cells instances
+        netlist=[] 
+        for i in range(len(file_split)):
+            if file_split[i][0] in self.cell_names:
+                netlist.append(file_split[i])
         return netlist
 
     def _get_output_list(self,file_split): #a function to get the outputs of the circuits in a list
@@ -40,8 +44,8 @@ class Netlist:
                 outputs.append(l[1][0:-2])
         return outputs
     
-    def _get_netlist_dict(self, netlist_split):
-        netlist = {}
+    def _get_netlist_dict(self, netlist_split): #to make a netlist dictionary out of the netlist list
+        netlist = {}                            #key = instance name, value = instance type, inputs, output
         for l in netlist_split:
             netlist[l[1]]={'type':l[0]}
             for i in range (3, len(l)-1):
@@ -50,15 +54,16 @@ class Netlist:
                 netlist[l[1]][arg]=name
         return netlist
     
-    def to_v_netlist(self):
+    def to_v_netlist(self): #a function to update the verilog netlist and return the updated netlist after modification
         str = ''
         for key, value in self.netlist.items():
             line = '{0} {1} ( '.format(value['type'], key)
-            for i in range (1,len(value)):
+            for i in range (1,len(value)-1):
                 line = line + '.{0}({1}), '.format(list(value.keys())[i], list(value.values())[i])
             line = line[:-2]+' );'+'\n'
             str = str + line
-        return str
+
+        return self.v_header+str
         
     def cell_inputs(self, cell_name): #a function to return the list inputs of a certain cell instance
         return list(self.netlist[cell_name].values())[1:-2]
@@ -104,7 +109,7 @@ class Netlist:
                     index+=1
         return True
     
-    def buffer_all(self, max_fanout):
+    def buffer_all(self, max_fanout): #a function to add buffers as long as the fanout constraint is not satisfied
         flag = True
         while flag:
             keys = list(self.netlist.keys())
@@ -144,7 +149,7 @@ class Netlist:
         self._create_graph()
         return True
         
-    def clone_all(self, max_fanout):
+    def clone_all(self, max_fanout): #a function to clone all the cells violating the maximum fanout
         flag = True
         while flag:
             keys = list(self.netlist.keys())
@@ -153,7 +158,8 @@ class Netlist:
             self._create_graph()
         
     
-    def _get_wires_dict(self):
+    def _get_wires_dict(self): #a function to generate the wires dictionary 
+                               #with key= wire name, and values = wire source and destination(s)
         wires_temp = [list(d.values())[1:-1] for d in self.netlist.values()]
         wires = []
         for w in wires_temp:
@@ -202,7 +208,8 @@ class Netlist:
                 s = wires_dict[w]['source']
                 self.g.add_edge(s, d, label=w)
     
-    def _add_delay_to_graph(self):
+    def _add_delay_to_graph(self): #adding a weight to each edge representing the delay through the input pin 
+                                   #represented by the edge
         wires_dict = self._get_wires_dict()
         for key, value in wires_dict.items():
             for d in value['destination']:
@@ -219,7 +226,7 @@ class Netlist:
                                 d_pin_name = k2
                         self.g[s][d]['weight']= self.liberty.get_pin_delay(d_cell_type, d_pin_name, d_cell_cap)
     
-    def _split_on_FFs(self):
+    def _split_on_FFs(self): #to split the graph on the presence of FFs, representing a start/end to a path
         countq=0
         edges_to_add = []
         edges_to_remove = []
@@ -238,7 +245,7 @@ class Netlist:
         for e in edges_to_remove:
             self.g.remove_edge(e[0], e[1]) 
 
-    def report_no_of_cells_of_each_type(self):
+    def report_no_of_cells_of_each_type(self): #a function to return the total number of cells of each type
         cells_dict={}
         for c in self.cell_names:
             cells_dict[c]=0
@@ -246,14 +253,14 @@ class Netlist:
             cells_dict[value['type']]+=1
         return cells_dict
 
-    def report_max_delay(self):
+    def report_max_delay(self): #a function to report the maximum delay based on the longest path of the graph
         return nx.dag_longest_path_length(self.g)
 
-    def report_critical_path(self):
+    def report_critical_path(self): #a function to return the critical path of the circuit
         return nx.dag_longest_path(self.g)
     
-    def _sizing_up_iteration(self,desired_delay):
-        critical_p = self.report_critical_path()
+    def _sizing_up_iteration(self,desired_delay): #a function to optimize the size of the cells in a certain critical path 
+        critical_p = self.report_critical_path()  #using a greedy algorithm.
         l = len(critical_p)
         for i in range(20*l):
             d = self.report_max_delay()
@@ -283,28 +290,25 @@ class Netlist:
                 return
         print("100 iterations couldn't satisfy the delay constraint")
 
-    def _create_graph(self):
+    def _create_graph(self): #a function to create the graph representing the circuit using NetworkX
         self.g = nx.DiGraph()
         self._create_network()
         self._add_delay_to_graph()
         self._split_on_FFs()
         return self.g
     
-    def get_graph(self):
+    def get_graph(self): #a function to return the directed graph of the netlist
         return self.g
-
-    def max_delay(self):
-        return nx.dag_longest_path_length(self.g);
     
-    def _wire_destinations(self, wire_name):
-        destinations=[]
+    def _wire_destinations(self, wire_name): #a function to return the destinations of a certain wire in a list 
+        destinations=[]                      #of a list of the destination cell type and input pin.
         for key, value in self.netlist.items():
             for k2, v2 in list(value.items())[1:-2]:
                 if v2==wire_name:
                     destinations.append([value['type'], k2])
         return destinations 
     
-    def _get_output_capacitance(self, cell_name):
+    def _get_output_capacitance(self, cell_name): #a function to calculate the output capacitance for each cell instance.
         destinations = self._wire_destinations(self.cell_output(cell_name))
         c = 0
         for d in destinations:
@@ -313,7 +317,7 @@ class Netlist:
             c+= self.liberty.get_middle_capacitance()
         return c
     
-    def _update_load_capacitance(self):
+    def _update_load_capacitance(self): #a function to update the load capacitances of cells in the netlist dictionary
         for key in self.netlist.keys():
             self.netlist[key]['load_capacitance']=self._get_output_capacitance(key)
 
