@@ -2,6 +2,7 @@ import math
 import re
 import networkx as nx
 from Liberty import Liberty
+import random
 
 class Netlist:
     def __init__(self, v_file_name):
@@ -233,18 +234,36 @@ class Netlist:
     def report_critical_path(self):
         return nx.dag_longest_path(self.g)
     
-    def sizing_up(self):
+    def _sizing_up_iteration(self,desired_delay):
         critical_p = self.report_critical_path()
-        for n in critical_p:
-            if (n[0]!= 'q') & (n[0:2]!= '__'):
-                c_type =self.netlist[n]['type']
-                c_type_new =c_type[0:-1]+str(int(c_type[len(c_type)-1])+1)
-                if c_type_new in self.cell_names:
-                    self.netlist[n]['type']=c_type_new
-        self._update_load_capacitance() 
-        self._create_graph()
-                
-                
+        l = len(critical_p)
+        for i in range(20*l):
+            d = self.report_max_delay()
+            if d <= desired_delay:
+                return True
+                break
+            else:
+                n = random.choice(critical_p)
+                if (n[0]!= 'q') & (n[0:3]!= '__o') & (n[0:3]!= '__i'):
+                    c_type =self.netlist[n]['type']
+                    c_type_new =c_type[0:-1]+str(int(c_type[len(c_type)-1])+1)
+                    if c_type_new in self.cell_names:
+                        self.netlist[n]['type']=c_type_new
+                        self._update_load_capacitance() 
+                        self._create_graph()
+                        if self.report_max_delay()>d:
+                            self.netlist[n]['type']=c_type
+                            self._update_load_capacitance() 
+                            self._create_graph()
+        return False
+
+    def sizing_up(self,desired_delay):           
+        for j in range(100):
+            if(self._sizing_up_iteration(desired_delay)):
+                print("delay satisfied")
+                return
+        print("100 iterations couldn't satisfy the delay constraint")
+
     def _create_graph(self):
         self.g = nx.DiGraph()
         self._create_network()
