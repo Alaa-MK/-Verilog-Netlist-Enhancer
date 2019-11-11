@@ -12,7 +12,26 @@ Given:
 1. The Verilog netlist (to be enhanced) 
 2. The library liberty file
 
-# Assumptions
+## Dependencies
+1. Python3: 3.8 
+2. NetworkX 1.9
+```
+pip install networkx
+```
+3. Liberty-parser 0.0.4
+```
+pip install liberty-parser
+```
+4.Regex 2019.11.1
+```
+pip install regex
+```
+5. Matplotlib 3.1.1
+```
+pip install matplotlib
+```
+
+## Assumptions
 1. Each cell has only one output
 2. The list of the supported cells types is as follows:
 ['AND2X1','AND2X2','AOI21X1','AOI22X1','BUFX2','BUFX4','DFFNEGX1','NOR3X1',
@@ -20,12 +39,13 @@ Given:
 'OAI21X1','OAI22X1','OR2X1','OR2X2','TBUFX1','TBUFX2','XOR2X1','MUX2X1','XNOR2X1',
 'LATCH','DFFSR','CLKBUF1','CLKBUF2','CLKBUF3']
 
-# How to Use
+## Building and Running
 First, run the enhancer main file by typing the command
 ```
 python main.py
 ```
-Then, the program would ask to give the name of the verilog file as well as the library liberty file
+##Tools
+After running the main file, the program would ask to give the name of the verilog file as well as the library liberty file
  After successfully entering the file names the interface will display the following:
  
 **Please choose an option of the following:**
@@ -50,7 +70,7 @@ Then, the program would ask to give the name of the verilog file as well as the 
 
 And by entering any command, the program should apply the requested changes, and return the expected output
 
-# Limitations
+## Limitations
 
 This enhancer does not supply:
 1. calculating the delay for the rising and falling transitions of the inputs, it always chooses the larger transiton delay
