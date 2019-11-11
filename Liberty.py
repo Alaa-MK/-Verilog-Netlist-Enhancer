@@ -30,9 +30,23 @@ class Liberty:
             pin = cell.get_group('pin', 'Q')
         else:
             pin = cell.get_group('pin', 'Y')
-        time_table= select_timing_table(pin,pin_name,'rise_transition')
-        index=time_table.get_array('values')
-        index2=time_table.get_array('index_2')
+
+        time_table_rise= select_timing_table(pin,pin_name,'rise_transition')
+        time_table_fall= select_timing_table(pin,pin_name,'fall_transition')
+
+        index_rise=time_table_rise.get_array('values')
+        index_fall=time_table_fall.get_array('values')
+
+        #a new array to have the maximum value of the rising and falling delay
+        index=time_table_rise.get_array('values')
+        index[2][0]=max(index_rise[2][0],index_fall[2][0])   
+        index[2][1]=max(index_rise[2][1],index_fall[2][1])
+        index[2][2]=max(index_rise[2][2],index_fall[2][2])
+        index[2][3]=max(index_rise[2][3],index_fall[2][3])
+        index[2][4]=max(index_rise[2][4],index_fall[2][4])
+
+        #delay calculation using interpolation
+        index2=time_table_rise.get_array('index_2')
         if out_cap==index2[0][0]:
             delay= index[2][0]
         elif out_cap==index2[0][1]:
