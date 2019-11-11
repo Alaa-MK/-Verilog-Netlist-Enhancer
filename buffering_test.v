@@ -11,7 +11,14 @@ input inp2;
 input iccad_clk;
 
 // Start POs
-output out;
+output n2;
+output n3;
+output n4;
+output n5;
+output n6;
+output n7;
+output n8;
+output n9;
 
 // Start wires
 wire n1;

@@ -63,7 +63,7 @@ class Netlist:
         return list(self.netlist[cell_name].values())[1:-2]
         
     def cell_output(self, cell_name): #a function to return the list outputs of a certain cell instance
-        return list(self.netlist[cell_name].values())[-1]
+        return list(self.netlist[cell_name].values())[-2]
         
     def cell_fanout(self, cell_name): #a function to return the fanout of a given cell instance
         output_wire = self.cell_output(cell_name)
@@ -78,6 +78,7 @@ class Netlist:
     #returns true if the netlist was modified
     def _buffer_one_level(self, cell_name, max_fanout):
         fanout = self.cell_fanout(cell_name)
+        print(cell_name, fanout)
         if fanout <= max_fanout:
             return False        #no violation
         b_in = self.cell_output(cell_name)
@@ -107,9 +108,10 @@ class Netlist:
         flag = True
         while flag:
             keys = list(self.netlist.keys())
+            print(self.netlist.keys())
             flag = any([self._buffer_one_level(key, max_fanout) for key in keys])
-        self._update_load_capacitance()
-        self._create_graph()
+            self._update_load_capacitance()
+            self._create_graph()
             
     #clones the cell into two and divides outputs 
     def clone_cell(self, cell_name, n_clones):
@@ -151,13 +153,18 @@ class Netlist:
             wires_dict[wires[i]]['destination']=[]
             wires_dict[wires[i]]['source']=''    
         
+        for i in range (len(self.outputs)):
+            wires_dict[self.outputs[i]]={}
+            wires_dict[self.outputs[i]]['destination']=[]
+            wires_dict[self.outputs[i]]['source']=''    
+        
         #filling wires_dict
         for key, value in self.netlist.items():
             for w in list(value.values())[1:-2]:
                 wires_dict[w]['destination'].append(key)
             wires_dict[list(value.values())[-2]]['source']=key
+        
             
-        #return wires_dict
         Icount = 1
         Ocount = 1
         I = '__i1__'
