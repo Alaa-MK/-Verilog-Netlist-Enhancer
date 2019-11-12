@@ -204,6 +204,8 @@ class Netlist:
     
     def _add_delay_to_graph(self):
         wires_dict = self._get_wires_dict()
+        for e in self.g.edges():
+            self.g[e[0]][e[1]]['weight']=0
         for key, value in wires_dict.items():
             for d in value['destination']:
                 if d[0:2]!='__':
