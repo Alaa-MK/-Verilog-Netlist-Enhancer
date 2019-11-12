@@ -123,7 +123,7 @@ class Netlist:
         if fanout <= max_fanout:
             return False        #no violation
         c_output=self.cell_output(cell_name)
-        n = min(max_fanout, self.cell_fanout(cell_name))  # you shouldn't create clones more than the fanout
+        n = min(math.ceil(fanout/max_fanout), self.cell_fanout(cell_name))  # you shouldn't create clones more than the fanout
         fanout=self.cell_fanout(cell_name)
         wires = []
         wires.append(c_output)
@@ -135,7 +135,7 @@ class Netlist:
             self.wire_count+=1
             wires.append(wire_name)
             cell = self.netlist[cell_name].copy()
-            cell[list(cell.keys())[-1]] = wire_name
+            cell[list(cell.keys())[-2]] = wire_name
             self.netlist[c_name]=cell
                     
         #connect cells to destinations
@@ -149,13 +149,18 @@ class Netlist:
         self._create_graph()
         return True
         
-    def clone_all(self, max_fanout): #a function to clone all the cells violating the maximum fanout
+    def clone_all(self, max_fanout): #a function to clone all the cells violating the maximum fanout  
+        print('trying to satisfy the fanout constraint..')
         flag = True
-        while flag:
+        count = 10
+        while flag & (count > 0):
             keys = list(self.netlist.keys())
             flag = any([self._clone_cell(key, max_fanout) for key in keys])
             self._update_load_capacitance()
             self._create_graph()
+            count-=1
+        if(count==0):
+            print("The desired fanout couldn't be satisfied.")
         
     
     def _get_wires_dict(self): #a function to generate the wires dictionary 
@@ -211,6 +216,8 @@ class Netlist:
     def _add_delay_to_graph(self): #adding a weight to each edge representing the delay through the input pin 
                                    #represented by the edge
         wires_dict = self._get_wires_dict()
+        for e in self.g.edges():
+            self.g[e[0]][e[1]]['weight']=0
         for key, value in wires_dict.items():
             for d in value['destination']:
                 if d[0:2]!='__':
@@ -266,12 +273,11 @@ class Netlist:
             d = self.report_max_delay()
             if d <= desired_delay:
                 return True
-                break
             else:
                 n = random.choice(critical_p)
                 if (n[0]!= 'q') & (n[0:3]!= '__o') & (n[0:3]!= '__i'):
                     c_type =self.netlist[n]['type']
-                    c_type_new =c_type[0:-1]+str(int(c_type[len(c_type)-1])+1)
+                    c_type_new =c_type[0:-1]+str(int(c_type[-1])+1)
                     if c_type_new in self.cell_names:
                         self.netlist[n]['type']=c_type_new
                         self._update_load_capacitance() 
@@ -280,11 +286,13 @@ class Netlist:
                             self.netlist[n]['type']=c_type
                             self._update_load_capacitance() 
                             self._create_graph()
+                        else:
+                            print ("was ",c_type," now ",c_type_new)
         return False
 
     def sizing_up(self,desired_delay):     
         print('trying to satisfy delay constraint..')
-        for j in range(100):
+        for j in range(10):
             if(self._sizing_up_iteration(desired_delay)):
                 print("delay satisfied")
                 return
