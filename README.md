@@ -33,11 +33,13 @@ pip install matplotlib
 
 ## Assumptions
 1. Each cell has only one output
-2. The list of the supported cells types is as follows:
-['AND2X1','AND2X2','AOI21X1','AOI22X1','BUFX2','BUFX4','DFFNEGX1','NOR3X1',
-'DFFPOSX1','FAX1','HAX1','INVX1','INVX2','INVX4','INVX8','NAND2X1','NAND3X1','NOR2X1',
-'OAI21X1','OAI22X1','OR2X1','OR2X2','TBUFX1','TBUFX2','XOR2X1','MUX2X1','XNOR2X1',
-'LATCH','DFFSR','CLKBUF1','CLKBUF2','CLKBUF3']
+2. The input transition is fixed and equal to the middle value of the tranistion table.
+3. The load capacitance of the circuit outputs is fixed and equal to the middle value of the capacitances in the tranistion table.
+4. The list of the supported cells types is as follows:
+['AND2X1', 'AND2X2', 'AOI21X1', 'AOI22X1', 'BUFX2', 'BUFX4', 'DFFNEGX1', 'NOR3X1',
+ 'DFFPOSX1', 'FAX1', 'HAX1', 'INVX1', 'INVX2', 'INVX4', 'INVX8', 'NAND2X1', 'NAND3X1', 'NOR2X1',
+ 'OAI21X1', 'OAI22X1', 'OR2X1', 'OR2X2', 'TBUFX1', 'TBUFX2', 'XOR2X1', 'MUX2X1', 'XNOR2X1',
+ 'LATCH', 'DFFSR', 'CLKBUF1', 'CLKBUF2', 'CLKBUF3']
 
 ## Building and Running
 First, run the enhancer main file by typing the command
@@ -73,7 +75,7 @@ And by entering any command, the program should apply the requested changes, and
 ## Limitations
 
 This enhancer does not supply:
-1. calculating the delay for the rising and falling transitions of the inputs, it always chooses the larger transiton delay
+1. calculating the delay for the rising and falling transitions of the inputs, it always chooses the larger transition delay
 2. Optimization algorithms to enhance the delay and fanout
 3. An enhanced visualization of the circuit
 
