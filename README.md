@@ -79,4 +79,5 @@ This enhancer does not supply:
 2. Optimization algorithms to enhance the delay and fanout
 3. An enhanced visualization of the circuit
 
-
+## Acknowledgement
+ We would like to express our very great appreciation to The American University in Cairo (AUC) for its continuous support, and the Digital Design II Course, under the supervision of Professor Mohamed Shalan.
