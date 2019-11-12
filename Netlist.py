@@ -3,6 +3,7 @@ import re
 import networkx as nx
 from Liberty import Liberty
 import random
+import copy
 
 class Netlist:
     def __init__(self, v_file_name, lib_file_name):
@@ -258,6 +259,8 @@ class Netlist:
             cells_dict[c]=0
         for key,value in self.netlist.items():
             cells_dict[value['type']]+=1
+        for key,value in cells_dict.items():
+            print(key,": ",value)
         return cells_dict
 
     def report_max_delay(self): #a function to report the maximum delay based on the longest path of the graph
@@ -279,15 +282,16 @@ class Netlist:
                     c_type =self.netlist[n]['type']
                     c_type_new =c_type[0:-1]+str(int(c_type[-1])+1)
                     if c_type_new in self.cell_names:
-                        self.netlist[n]['type']=c_type_new
-                        self._update_load_capacitance() 
-                        self._create_graph()
-                        if self.report_max_delay()>d:
-                            self.netlist[n]['type']=c_type
+                        temp=copy.deepcopy(self)
+                        temp.netlist[n]['type']=c_type_new
+                        temp._update_load_capacitance() 
+                        temp._create_graph()
+                        print(temp.report_max_delay())
+                        if (temp.report_max_delay()<d):
+                            self.netlist[n]['type']=c_type_new
                             self._update_load_capacitance() 
                             self._create_graph()
-                        else:
-                            print ("was ",c_type," now ",c_type_new)
+                            print(self.report_max_delay())
         return False
 
     def sizing_up(self,desired_delay):     
@@ -296,7 +300,7 @@ class Netlist:
             if(self._sizing_up_iteration(desired_delay)):
                 print("delay satisfied")
                 return
-        print("100 iterations couldn't satisfy the delay constraint")
+        print("iterations couldn't satisfy the delay constraint")
 
     def _create_graph(self): #a function to create the graph representing the circuit using NetworkX
         self.g = nx.DiGraph()
