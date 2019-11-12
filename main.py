@@ -3,6 +3,7 @@ from Netlist import Netlist
 import matplotlib.pyplot as plt
 import networkx as nx
 import sys, getopt
+import os
 
 
 
@@ -10,27 +11,35 @@ def main(argv):
 
     vfile=input('please enter the name of the v file: ')
     libfile = input('please enter the name of the liberty file: ')
-            
+
+    while not (os.path.isfile(vfile)) or not (os.path.isfile(libfile)):
+        print("file not exist. Please, re-enter")
+        vfile=input('please enter the name of the v file: ')
+        libfile = input('please enter the name of the liberty file: ')
+
     netlist = Netlist(vfile, libfile)   
     choice = ''
     while True:
-        choice = input('''Please choose an option of the following: 
-            delay: report the maximum delay of the circuit
-            n-cells: report the total number of cells in the circuit
-            fanout: report the max fanout of the circuit
-            buffer: satisfy the max fanout constraint using buffering
-            clone: try to satisfy the max fanout constraint using cloning
-            size: do greedy sizing algorithm to decrease the delay of the critical path
-            graph: visualize the circuit as a graph
-            netlist: print the current verilog netlist
-            quit: quit the program
-            
-            ''')
+        choice = input('''
+
+==================================================================================
+Please choose an option of the following: 
+- delay: report the maximum delay of the circuit
+- n-cells: report the total number of cells in the circuit
+- fanout: report the max fanout of the circuit
+- buffer: satisfy the max fanout constraint using buffering
+- clone: try to satisfy the max fanout constraint using cloning
+- size: do greedy sizing algorithm to decrease the delay of the critical path
+- graph: visualize the circuit as a graph
+- netlist: print the current verilog netlist
+- quit: quit the program
+=================================================================================
+> ''')
         c = choice.lower()
         if c=='delay':
             print(netlist.report_max_delay())
         elif c=='n-cells':
-            print(netlist.report_no_of_cells_of_each_type())
+            netlist.report_no_of_cells_of_each_type()
         elif c=='fanout':
             print(netlist.max_fanout())
         elif c=='buffer':
