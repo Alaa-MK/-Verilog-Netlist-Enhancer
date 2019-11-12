@@ -22,7 +22,7 @@ pip install networkx
 ```
 pip install liberty-parser
 ```
-4.Regex 2019.11.1
+4. Regex 2019.11.1
 ```
 pip install regex
 ```
