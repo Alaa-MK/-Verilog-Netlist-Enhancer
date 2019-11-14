@@ -16,8 +16,9 @@ class Netlist:
         netlist_split = self._get_netlist_split(file)
         self.outputs = self._get_output_list(file)
         self.netlist = self._get_netlist_dict(netlist_split)
-        self._update_load_capacitance()
-        self._create_graph()
+        #self._update_load_capacitance()
+        #self._create_graph()
+        self.g=None
         self.cell_count = 0
         self.wire_count = 0
         
@@ -264,15 +265,21 @@ class Netlist:
         return cells_dict
 
     def report_max_delay(self): #a function to report the maximum delay based on the longest path of the graph
+        if self.g is None:
+            self._update_load_capacitance()
+            self._create_graph()
         return nx.dag_longest_path_length(self.g)
 
     def report_critical_path(self): #a function to return the critical path of the circuit
+        if self.g is None:
+            self._update_load_capacitance()
+            self._create_graph()
         return nx.dag_longest_path(self.g)
     
     def _sizing_up_iteration(self,desired_delay): #a function to optimize the size of the cells in a certain critical path 
         critical_p = self.report_critical_path()  #using a greedy algorithm.
         l = len(critical_p)
-        for i in range(20*l):
+        for i in range(10*l):
             d = self.report_max_delay()
             if d <= desired_delay:
                 return True
@@ -310,6 +317,9 @@ class Netlist:
         return self.g
     
     def get_graph(self): #a function to return the directed graph of the netlist
+        if self.g is None:
+            self._update_load_capacitance()
+            self._create_graph()
         return self.g
     
     def _wire_destinations(self, wire_name): #a function to return the destinations of a certain wire in a list 

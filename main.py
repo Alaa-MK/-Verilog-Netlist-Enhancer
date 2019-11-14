@@ -8,9 +8,11 @@ import os
 
 
 def main(argv):
-    vfile=input('please enter the name of the v file: ')
-    libfile = input('please enter the name of the liberty file: ')
+#    vfile=input('please enter the name of the v file: ')
+#    libfile = input('please enter the name of the liberty file: ')
 
+    vfile='examples/new/uart_synth.rtl_new.v'
+    libfile = 'examples/osu035.lib'
     while not (os.path.isfile(vfile)) or not (os.path.isfile(libfile)):
         print("file not exist. Please, re-enter")
         vfile=input('please enter the name of the v file: ')
@@ -37,6 +39,9 @@ Please choose an option of the following:
         c = choice.lower()
         if c=='delay':
             print(netlist.report_max_delay())
+#            g = netlist.get_graph()
+#            for e in g.edges():
+#                print(g.get_edge_data(e[0], e[1]))
         elif c=='n-cells':
             netlist.report_no_of_cells_of_each_type()
         elif c=='fanout':
